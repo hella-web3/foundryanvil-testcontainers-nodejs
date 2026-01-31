@@ -1,21 +1,16 @@
 import {
   AnvilOptions,
   GetAnvilOptions,
-  SetFlagFunction,
   ToggleFlagFunction,
 } from "./anvil-options";
 
 export class NetworkOptions {
-  // @ts-ignore
-  private readonly setCliFlag: SetFlagFunction;
   private readonly toggleCliFlag: ToggleFlagFunction;
   private readonly getAnvilOptions: GetAnvilOptions;
   constructor(
-    setFlagFunction: SetFlagFunction,
     toggleFlagFunction: ToggleFlagFunction,
     getAnvilOptions: GetAnvilOptions,
   ) {
-    this.setCliFlag = setFlagFunction;
     this.toggleCliFlag = toggleFlagFunction;
     this.getAnvilOptions = getAnvilOptions;
   }

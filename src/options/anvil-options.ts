@@ -54,7 +54,6 @@ export class AnvilOptions {
   private getAnvilOptions: GetAnvilOptions = () => this;
 
   private _network = new NetworkOptions(
-    this.setFlagFunction,
     this.toggleFlagFunction,
     this.getAnvilOptions,
   );
