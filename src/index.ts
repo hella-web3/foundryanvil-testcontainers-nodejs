@@ -1,51 +1,36 @@
-import { AbstractStartedContainer, GenericContainer, StartedTestContainer, Wait, } from "testcontainers";
-import { Abi, createTestClient, http, parseEther, publicActions, TransactionReceipt, walletActions, } from "viem";
+import {
+  AbstractStartedContainer,
+  GenericContainer,
+  StartedTestContainer,
+  Wait,
+} from "testcontainers";
+import {
+  Abi,
+  createTestClient,
+  http,
+  parseEther,
+  publicActions,
+  TransactionReceipt,
+  walletActions,
+} from "viem";
 import { foundry } from "viem/chains";
 import * as fs from "node:fs";
 import path from "node:path";
+import { AnvilOptions } from "./options/AnvilOptions";
+import { AccountOptions } from "./options/AccountOptions";
+import { MiningOptions } from "./options/MiningOptions";
+import { LoggingOptions } from "./options/LoggingOptions";
+import { ForkingOptions } from "./options/ForkingOptions";
+import { NetworkOptions } from "./options/NetworkOptions";
+import { EvmOptions } from "./options/EvmOptions";
+import { ServerOptions } from "./options/ServerOptions";
+import { StateOptions } from "./options/StateOptions";
+import { Color, Hardfork, HexString, LogVerbosity, Order } from "./types";
+
+export { Color, Hardfork, LogVerbosity, Order };
+export type { HexString };
 
 const BASE_ENTRYPOINT = ["anvil"];
-
-export enum LogVerbosity {
-  One = "-v",
-  Two = "-vv",
-  Three = "-vvv",
-  Four = "-vvvv",
-  Five = "-vvvvv",
-}
-
-export enum Hardfork {
-  Frontier = "frontier",
-  Homestead = "homestead",
-  Dao = "dao",
-  Tangerine = "tangerine",
-  SpuriousDragon = "spuriousDragon",
-  Byzantium = "byzantium",
-  Constantinople = "constantinople",
-  Petersburg = "petersburg",
-  Istanbul = "istanbul",
-  MuirGlacier = "muirGlacier",
-  Berlin = "berlin",
-  London = "london",
-  ArrowGlacier = "arrowGlacier",
-  GrayGlacier = "grayGlacier",
-  Paris = "paris",
-  Shanghai = "shanghai",
-  Cancun = "cancun",
-  Prague = "prague",
-  Latest = "latest",
-}
-
-export enum Order {
-  Fees = "fees",
-  Fifo = "fifo",
-}
-
-export enum Color {
-  Auto = "auto",
-  Always = "always",
-  Never = "never",
-}
 
 /**
  * A Testcontainer for Foundry's Anvil.
@@ -55,8 +40,16 @@ export enum Color {
  * const container = await new AnvilContainer().start();
  * ```
  */
-export class AnvilContainer extends GenericContainer {
+export class AnvilContainer extends GenericContainer implements AnvilOptions {
   private entryPoint: string[] = BASE_ENTRYPOINT;
+  private accountOptions = new AccountOptions(this);
+  private miningOptions = new MiningOptions(this);
+  private loggingOptions = new LoggingOptions(this);
+  private forkingOptions = new ForkingOptions(this);
+  private networkOptions = new NetworkOptions(this);
+  private evmOptions = new EvmOptions(this);
+  private serverOptions = new ServerOptions(this);
+  private stateOptions = new StateOptions(this);
 
   /**
    * Creates a new AnvilContainer.
@@ -77,7 +70,7 @@ export class AnvilContainer extends GenericContainer {
    * @param count Number of accounts. Defaults to 10.
    */
   public withAccounts(count: number): this {
-    this.setCliFlag("--accounts", count.toString());
+    this.accountOptions.withAccounts(count);
     return this;
   }
 
@@ -86,7 +79,7 @@ export class AnvilContainer extends GenericContainer {
    * @param seconds Block time in seconds.
    */
   public withBlockTime(seconds: number): this {
-    this.setCliFlag("--block-time", seconds.toString());
+    this.miningOptions.withBlockTime(seconds);
     return this;
   }
 
@@ -95,7 +88,7 @@ export class AnvilContainer extends GenericContainer {
    * @param balance Balance in Ether. Defaults to 10000.
    */
   public withBalance(balance: number): this {
-    this.setCliFlag("--balance", balance.toString());
+    this.accountOptions.withBalance(balance);
     return this;
   }
 
@@ -104,7 +97,7 @@ export class AnvilContainer extends GenericContainer {
    * @param path File path.
    */
   public withConfigOut(path: string): this {
-    this.setCliFlag("--config-out", path);
+    this.stateOptions.withConfigOut(path);
     return this;
   }
 
@@ -113,7 +106,7 @@ export class AnvilContainer extends GenericContainer {
    * @param path Derivation path. Defaults to m/44'/60'/0'/0/.
    */
   public withDerivationPath(path: string): this {
-    this.setCliFlag("--derivation-path", path);
+    this.accountOptions.withDerivationPath(path);
     return this;
   }
 
@@ -122,7 +115,7 @@ export class AnvilContainer extends GenericContainer {
    * @param path File path or directory.
    */
   public withDumpState(path: string): this {
-    this.setCliFlag("--dump-state", path);
+    this.stateOptions.withDumpState(path);
     return this;
   }
 
@@ -131,7 +124,7 @@ export class AnvilContainer extends GenericContainer {
    * @param hardfork Hardfork name.
    */
   public withHardfork(hardfork: Hardfork): this {
-    this.setCliFlag("--hardfork", hardfork);
+    this.evmOptions.withHardfork(hardfork);
     return this;
   }
 
@@ -140,7 +133,7 @@ export class AnvilContainer extends GenericContainer {
    * @param path Path to genesis.json.
    */
   public withInit(path: string): this {
-    this.setCliFlag("--init", path);
+    this.stateOptions.withInit(path);
     return this;
   }
 
@@ -149,11 +142,7 @@ export class AnvilContainer extends GenericContainer {
    * @param path Optional IPC path.
    */
   public withIpc(path?: string): this {
-    if (path) {
-      this.setCliFlag("--ipc", path);
-    } else {
-      this.setCliToggle("--ipc", true);
-    }
+    this.serverOptions.withIpc(path);
     return this;
   }
 
@@ -162,7 +151,7 @@ export class AnvilContainer extends GenericContainer {
    * @param threads Number of threads.
    */
   public withThreads(threads: number): this {
-    this.setCliFlag("--threads", threads.toString());
+    this.serverOptions.withThreads(threads);
     return this;
   }
 
@@ -171,7 +160,7 @@ export class AnvilContainer extends GenericContainer {
    * @param path Path to state file.
    */
   public withLoadState(path: string): this {
-    this.setCliFlag("--load-state", path);
+    this.stateOptions.withLoadState(path);
     return this;
   }
 
@@ -181,9 +170,7 @@ export class AnvilContainer extends GenericContainer {
    * @param mnemonic Mnemonic phrase.
    */
   public withMnemonic(mnemonic: string): this {
-    this.removeCliFlag("--mnemonic-random");
-    this.removeCliFlag("--mnemonic-seed-unsafe");
-    this.setCliFlag("--mnemonic", mnemonic);
+    this.accountOptions.withMnemonic(mnemonic);
     return this;
   }
 
@@ -193,13 +180,7 @@ export class AnvilContainer extends GenericContainer {
    * @param words Number of words in the mnemonic. Defaults to 12.
    */
   public withRandomMnemonic(words?: number) {
-    this.removeCliFlag("--mnemonic");
-    this.removeCliFlag("--mnemonic-seed-unsafe");
-    if (words) {
-      this.setCliFlag("--mnemonic-random", words.toString());
-    } else {
-      this.setCliToggle("--mnemonic-random", true);
-    }
+    this.accountOptions.withRandomMnemonic(words);
     return this;
   }
 
@@ -209,9 +190,7 @@ export class AnvilContainer extends GenericContainer {
    * @param seed Mnemonic seed.
    */
   public withMnemonicSeedUnsafe(seed: string): this {
-    this.removeCliFlag("--mnemonic");
-    this.removeCliFlag("--mnemonic-random");
-    this.setCliFlag("--mnemonic-seed-unsafe", seed);
+    this.accountOptions.withMnemonicSeedUnsafe(seed);
     return this;
   }
 
@@ -220,7 +199,7 @@ export class AnvilContainer extends GenericContainer {
    * @param count Max states.
    */
   public withMaxPersistedStates(count: number): this {
-    this.setCliFlag("--max-persisted-states", count.toString());
+    this.stateOptions.withMaxPersistedStates(count);
     return this;
   }
 
@@ -228,7 +207,7 @@ export class AnvilContainer extends GenericContainer {
    * Enable mixed mining.
    */
   public withMixedMining(enabled: boolean = true): this {
-    this.setCliToggle("--mixed-mining", enabled);
+    this.miningOptions.withMixedMining(enabled);
     return this;
   }
 
@@ -236,7 +215,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable auto and interval mining, and mine on demand instead.
    */
   public withNoMining(enabled: boolean = true): this {
-    this.setCliToggle("--no-mining", enabled);
+    this.miningOptions.withNoMining(enabled);
     return this;
   }
 
@@ -245,7 +224,7 @@ export class AnvilContainer extends GenericContainer {
    * @param number Block number.
    */
   public withBlockNumber(number: number): this {
-    this.setCliFlag("--number", number.toString());
+    this.miningOptions.withBlockNumber(number);
     return this;
   }
 
@@ -254,7 +233,7 @@ export class AnvilContainer extends GenericContainer {
    * @param order Sorting order. Defaults to fees.
    */
   public withOrder(order: Order): this {
-    this.setCliFlag("--order", order);
+    this.stateOptions.withOrder(order);
     return this;
   }
 
@@ -262,7 +241,7 @@ export class AnvilContainer extends GenericContainer {
    * Preserve historical state snapshots when dumping the state.
    */
   public withPreserveHistoricalStates(enabled: boolean = true): this {
-    this.setCliToggle("--preserve-historical-states", enabled);
+    this.stateOptions.withPreserveHistoricalStates(enabled);
     return this;
   }
 
@@ -271,11 +250,7 @@ export class AnvilContainer extends GenericContainer {
    * @param count Optional max number of states to keep in memory.
    */
   public withPruneHistory(count?: number): this {
-    if (count !== undefined) {
-      this.setCliFlag("--prune-history", count.toString());
-    } else {
-      this.setCliToggle("--prune-history", true);
-    }
+    this.stateOptions.withPruneHistory(count);
     return this;
   }
 
@@ -284,7 +259,7 @@ export class AnvilContainer extends GenericContainer {
    * @param seconds Interval in seconds.
    */
   public withStateInterval(seconds: number): this {
-    this.setCliFlag("--state-interval", seconds.toString());
+    this.stateOptions.withStateInterval(seconds);
     return this;
   }
 
@@ -293,7 +268,7 @@ export class AnvilContainer extends GenericContainer {
    * @param slots Number of slots. Defaults to 32.
    */
   public withSlotsInAnEpoch(slots: number): this {
-    this.setCliFlag("--slots-in-an-epoch", slots.toString());
+    this.miningOptions.withSlotsInAnEpoch(slots);
     return this;
   }
 
@@ -302,7 +277,7 @@ export class AnvilContainer extends GenericContainer {
    * @param path Path to state file.
    */
   public withState(path: string): this {
-    this.setCliFlag("--state", path);
+    this.stateOptions.withState(path);
     return this;
   }
 
@@ -311,7 +286,7 @@ export class AnvilContainer extends GenericContainer {
    * @param timestamp Genesis timestamp.
    */
   public withTimestamp(timestamp: number): this {
-    this.setCliFlag("--timestamp", timestamp.toString());
+    this.stateOptions.withTimestamp(timestamp);
     return this;
   }
 
@@ -320,7 +295,7 @@ export class AnvilContainer extends GenericContainer {
    * @param count Block count.
    */
   public withTransactionBlockKeeper(count: number): this {
-    this.setCliFlag("--transaction-block-keeper", count.toString());
+    this.stateOptions.withTransactionBlockKeeper(count);
     return this;
   }
 
@@ -329,7 +304,7 @@ export class AnvilContainer extends GenericContainer {
    * @param color Color option.
    */
   public withColor(color: Color): this {
-    this.setCliFlag("--color", color);
+    this.loggingOptions.withColor(color);
     return this;
   }
 
@@ -337,7 +312,7 @@ export class AnvilContainer extends GenericContainer {
    * Format log messages as Markdown.
    */
   public withMarkdownFormat(enabled: boolean = true): this {
-    this.setCliToggle("--md", enabled);
+    this.loggingOptions.withMarkdownFormat(enabled);
     return this;
   }
 
@@ -345,7 +320,7 @@ export class AnvilContainer extends GenericContainer {
    * Do not print log messages.
    */
   public quiet(enabled: boolean = true): this {
-    this.setCliToggle("--quiet", enabled);
+    this.loggingOptions.quiet(enabled);
     return this;
   }
 
@@ -358,12 +333,7 @@ export class AnvilContainer extends GenericContainer {
    * @param logVerbosity The verbosity level.
    */
   public verboseLogs(logVerbosity: LogVerbosity): this {
-    // Remove any existing verbosity flags
-    Object.values(LogVerbosity).forEach((v) => {
-      const idx = this.entryPoint.indexOf(v);
-      if (idx !== -1) this.entryPoint.splice(idx, 1);
-    });
-    this.entryPoint.push(logVerbosity);
+    this.loggingOptions.verboseLogs(logVerbosity);
     return this;
   }
 
@@ -371,7 +341,7 @@ export class AnvilContainer extends GenericContainer {
    * Enables automatic impersonation on startup.
    */
   public autoImpersonate(enabled: boolean = true): this {
-    this.setCliToggle("--auto-impersonate", enabled);
+    this.evmOptions.autoImpersonate(enabled);
     return this;
   }
 
@@ -379,7 +349,7 @@ export class AnvilContainer extends GenericContainer {
    * Format log messages as JSON.
    */
   public jsonLogFormat(enabled: boolean = true): this {
-    this.setCliToggle("--json", enabled);
+    this.loggingOptions.jsonLogFormat(enabled);
     return this;
   }
 
@@ -388,7 +358,7 @@ export class AnvilContainer extends GenericContainer {
    * @param origin Allow origin header. Defaults to *.
    */
   public withAllowOrigin(origin: string): this {
-    this.setCliFlag("--allow-origin", origin);
+    this.serverOptions.withAllowOrigin(origin);
     return this;
   }
 
@@ -397,7 +367,7 @@ export class AnvilContainer extends GenericContainer {
    * @param path Cache path.
    */
   public withCachePath(path: string): this {
-    this.setCliFlag("--cache-path", path);
+    this.serverOptions.withCachePath(path);
     return this;
   }
 
@@ -405,7 +375,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable CORS.
    */
   public noCors(enabled: boolean = true): this {
-    this.setCliToggle("--no-cors", enabled);
+    this.serverOptions.noCors(enabled);
     return this;
   }
 
@@ -413,7 +383,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable the default request body size limit.
    */
   public noRequestSizeLimit(enabled: boolean = true): this {
-    this.setCliToggle("--no-request-size-limit", enabled);
+    this.serverOptions.noRequestSizeLimit(enabled);
     return this;
   }
 
@@ -422,7 +392,7 @@ export class AnvilContainer extends GenericContainer {
    * @param cups CUPS value. Defaults to 330.
    */
   public withComputeUnitsPerSecond(cups: number): this {
-    this.setCliFlag("--compute-units-per-second", cups.toString());
+    this.forkingOptions.withComputeUnitsPerSecond(cups);
     return this;
   }
 
@@ -438,7 +408,7 @@ export class AnvilContainer extends GenericContainer {
    */
   public withForkUrl(url: string): this {
     this.withEnvironment({ ANVIL_FORK_URL: url });
-    this.setCliFlag("--fork-url", url);
+    this.forkingOptions.withForkUrl(url);
     return this;
   }
 
@@ -455,7 +425,7 @@ export class AnvilContainer extends GenericContainer {
    */
   public withForkBlockNumber(blockNumber: number): this {
     this.withEnvironment({ ANVIL_FORK_BLOCK_NUMBER: blockNumber.toString() });
-    this.setCliFlag("--fork-block-number", blockNumber.toString());
+    this.forkingOptions.withForkBlockNumber(blockNumber);
     return this;
   }
 
@@ -464,7 +434,7 @@ export class AnvilContainer extends GenericContainer {
    * @param chainId Chain ID.
    */
   public withForkChainId(chainId: number): this {
-    this.setCliFlag("--fork-chain-id", chainId.toString());
+    this.forkingOptions.withForkChainId(chainId);
     return this;
   }
 
@@ -473,7 +443,7 @@ export class AnvilContainer extends GenericContainer {
    * @param header Header string, e.g. "User-Agent: test-agent".
    */
   public withForkHeader(header: string): this {
-    this.setCliFlag("--fork-header", header);
+    this.forkingOptions.withForkHeader(header);
     return this;
   }
 
@@ -482,7 +452,7 @@ export class AnvilContainer extends GenericContainer {
    * @param backoff Backoff in ms.
    */
   public withForkRetryBackoff(backoff: number): this {
-    this.setCliFlag("--fork-retry-backoff", backoff.toString());
+    this.forkingOptions.withForkRetryBackoff(backoff);
     return this;
   }
 
@@ -491,7 +461,7 @@ export class AnvilContainer extends GenericContainer {
    * @param hash Transaction hash.
    */
   public withForkTransactionHash(hash: string): this {
-    this.setCliFlag("--fork-transaction-hash", hash);
+    this.forkingOptions.withForkTransactionHash(hash);
     return this;
   }
 
@@ -499,7 +469,7 @@ export class AnvilContainer extends GenericContainer {
    * Disables rate limiting for this node's provider.
    */
   public noRateLimit(enabled: boolean = true): this {
-    this.setCliToggle("--no-rate-limit", enabled);
+    this.forkingOptions.noRateLimit(enabled);
     return this;
   }
 
@@ -507,7 +477,7 @@ export class AnvilContainer extends GenericContainer {
    * Explicitly disables the use of RPC caching.
    */
   public noStorageCaching(enabled: boolean = true): this {
-    this.setCliToggle("--no-storage-caching", enabled);
+    this.forkingOptions.noStorageCaching(enabled);
     return this;
   }
 
@@ -516,7 +486,7 @@ export class AnvilContainer extends GenericContainer {
    * @param retries Number of retries. Defaults to 5.
    */
   public withRetries(retries: number): this {
-    this.setCliFlag("--retries", retries.toString());
+    this.forkingOptions.withRetries(retries);
     return this;
   }
 
@@ -525,7 +495,7 @@ export class AnvilContainer extends GenericContainer {
    * @param timeout Timeout in ms. Defaults to 45000.
    */
   public withTimeout(timeout: number): this {
-    this.setCliFlag("--timeout", timeout.toString());
+    this.forkingOptions.withTimeout(timeout);
     return this;
   }
 
@@ -534,7 +504,7 @@ export class AnvilContainer extends GenericContainer {
    * @param fee Base fee.
    */
   public withBlockBaseFeePerGas(fee: number | bigint): this {
-    this.setCliFlag("--block-base-fee-per-gas", fee.toString());
+    this.evmOptions.withBlockBaseFeePerGas(fee);
     return this;
   }
 
@@ -543,7 +513,7 @@ export class AnvilContainer extends GenericContainer {
    * @param chainId Chain ID.
    */
   public withChainId(chainId: number): this {
-    this.setCliFlag("--chain-id", chainId.toString());
+    this.evmOptions.withChainId(chainId);
     return this;
   }
 
@@ -552,7 +522,7 @@ export class AnvilContainer extends GenericContainer {
    * @param size Code size limit. Defaults to 0x6000.
    */
   public withCodeSizeLimit(size: number): this {
-    this.setCliFlag("--code-size-limit", size.toString());
+    this.evmOptions.withCodeSizeLimit(size);
     return this;
   }
 
@@ -560,7 +530,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable the `call.gas_limit <= block.gas_limit` constraint.
    */
   public disableBlockGasLimit(enabled: boolean = true): this {
-    this.setCliToggle("--disable-block-gas-limit", enabled);
+    this.evmOptions.disableBlockGasLimit(enabled);
     return this;
   }
 
@@ -568,7 +538,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable EIP-170: Contract code size limit.
    */
   public disableCodeSizeLimit(enabled: boolean = true): this {
-    this.setCliToggle("--disable-code-size-limit", enabled);
+    this.evmOptions.disableCodeSizeLimit(enabled);
     return this;
   }
 
@@ -576,7 +546,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable the enforcement of a minimum suggested priority fee.
    */
   public disableMinPriorityFee(enabled: boolean = true): this {
-    this.setCliToggle("--disable-min-priority-fee", enabled);
+    this.evmOptions.disableMinPriorityFee(enabled);
     return this;
   }
 
@@ -585,7 +555,7 @@ export class AnvilContainer extends GenericContainer {
    * @param limit Gas limit.
    */
   public withGasLimit(limit: number | bigint): this {
-    this.setCliFlag("--gas-limit", limit.toString());
+    this.evmOptions.withGasLimit(limit);
     return this;
   }
 
@@ -594,7 +564,7 @@ export class AnvilContainer extends GenericContainer {
    * @param price Gas price.
    */
   public withGasPrice(price: number | bigint): this {
-    this.setCliFlag("--gas-price", price.toString());
+    this.evmOptions.withGasPrice(price);
     return this;
   }
 
@@ -602,7 +572,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable printing of `console.log` invocations to stdout.
    */
   public disableConsoleLog(enabled: boolean = true): this {
-    this.setCliToggle("--disable-console-log", enabled);
+    this.loggingOptions.disableConsoleLog(enabled);
     return this;
   }
 
@@ -610,7 +580,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable the default create2 deployer.
    */
   public disableDefaultCreate2Deployer(enabled: boolean = true): this {
-    this.setCliToggle("--disable-default-create2-deployer", enabled);
+    this.evmOptions.disableDefaultCreate2Deployer(enabled);
     return this;
   }
 
@@ -618,7 +588,7 @@ export class AnvilContainer extends GenericContainer {
    * Disable pool balance checks.
    */
   public disablePoolBalanceChecks(enabled: boolean = true): this {
-    this.setCliToggle("--disable-pool-balance-checks", enabled);
+    this.evmOptions.disablePoolBalanceChecks(enabled);
     return this;
   }
 
@@ -627,7 +597,7 @@ export class AnvilContainer extends GenericContainer {
    * @param limit Memory limit.
    */
   public withMemoryLimit(limit: number): this {
-    this.setCliFlag("--memory-limit", limit.toString());
+    this.evmOptions.withMemoryLimit(limit);
     return this;
   }
 
@@ -635,7 +605,7 @@ export class AnvilContainer extends GenericContainer {
    * Enable printing of traces for executed transactions and `eth_call` to stdout.
    */
   public withPrintTraces(enabled: boolean = true): this {
-    this.setCliToggle("--print-traces", enabled);
+    this.evmOptions.withPrintTraces(enabled);
     return this;
   }
 
@@ -643,7 +613,7 @@ export class AnvilContainer extends GenericContainer {
    * Enable steps tracing used for debug calls returning geth-style traces.
    */
   public withStepsTracing(enabled: boolean = true): this {
-    this.setCliToggle("--steps-tracing", enabled);
+    this.evmOptions.withStepsTracing(enabled);
     return this;
   }
 
@@ -651,7 +621,7 @@ export class AnvilContainer extends GenericContainer {
    * Enable Celo network features.
    */
   public withCelo(enabled: boolean = true): this {
-    this.setCliToggle("--celo", enabled);
+    this.networkOptions.withCelo(enabled);
     return this;
   }
 
@@ -659,7 +629,7 @@ export class AnvilContainer extends GenericContainer {
    * Enable Optimism network features.
    */
   public withOptimism(enabled: boolean = true): this {
-    this.setCliToggle("--optimism", enabled);
+    this.networkOptions.withOptimism(enabled);
     return this;
   }
 
@@ -680,7 +650,7 @@ export class AnvilContainer extends GenericContainer {
     );
   }
 
-  private setCliFlag(flag: string, value: string) {
+  public setCliFlag(flag: string, value: string) {
     const index = this.entryPoint.indexOf(flag);
     if (index !== -1) {
       this.entryPoint[index + 1] = value;
@@ -689,14 +659,23 @@ export class AnvilContainer extends GenericContainer {
     }
   }
 
-  private removeCliFlag(flag: string) {
+  public removeCliFlag(flag: string) {
     const index = this.entryPoint.indexOf(flag);
     if (index !== -1) {
-      this.entryPoint.splice(index, 2);
+      // If it's a flag with a value (like --accounts 10)
+      // Check if next element is likely a value or another flag
+      if (
+        index + 1 < this.entryPoint.length &&
+        !this.entryPoint[index + 1].startsWith("-")
+      ) {
+        this.entryPoint.splice(index, 2);
+      } else {
+        this.entryPoint.splice(index, 1);
+      }
     }
   }
 
-  private setCliToggle(flag: string, enabled: boolean) {
+  public setCliToggle(flag: string, enabled: boolean) {
     const index = this.entryPoint.indexOf(flag);
     if (enabled && index === -1) {
       this.entryPoint.push(flag);
@@ -705,11 +684,6 @@ export class AnvilContainer extends GenericContainer {
     }
   }
 }
-
-/**
- * Represents a hex string with a 0x prefix.
- */
-export type HexString = `0x${string}`;
 
 /**
  * A started Anvil container with helper methods for interacting with the node.
