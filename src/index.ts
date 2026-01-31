@@ -16,17 +16,11 @@ import {
 import { foundry } from "viem/chains";
 import * as fs from "node:fs";
 import path from "node:path";
+import { Color, Hardfork, HexString, LogVerbosity, Order } from "./types";
+import { AnvilOptions } from "./options/anvil-options";
 
-const BASE_ENTRYPOINT = ["anvil", "--block-time", "1"];
-
-export enum LogVerbosity {
-  One = "-v",
-  Two = "-vv",
-  Three = "-vvv",
-  Four = "-vvvv",
-  Five = "-vvvvv",
-}
-
+export { Color, Hardfork, LogVerbosity, Order };
+export type { HexString };
 /**
  * A Testcontainer for Foundry's Anvil.
  *
@@ -36,8 +30,7 @@ export enum LogVerbosity {
  * ```
  */
 export class AnvilContainer extends GenericContainer {
-  private entryPoint: string[] = BASE_ENTRYPOINT;
-
+  private readonly options: AnvilOptions;
   /**
    * Creates a new AnvilContainer.
    * @example
@@ -45,87 +38,17 @@ export class AnvilContainer extends GenericContainer {
    * const container = await new AnvilContainer().start();
    * ```
    * @param image The docker image to use. Defaults to "hellaweb3/foundry-anvil:1.6".
+   * @param options
    */
-  constructor(image: string = "ghcr.io/foundry-rs/foundry:v1.6.0-rc1") {
+  constructor(
+    options?: AnvilOptions,
+    image: string = "ghcr.io/foundry-rs/foundry:v1.6.0-rc1",
+  ) {
     super(image);
     this.withExposedPorts(8545);
     this.withWaitStrategy(Wait.forLogMessage(/Listening on 0\.0\.0\.0:8545/));
-  }
 
-  private setCliFlag(flag: string, value: string) {
-    if (!this.entryPoint.includes(flag)) {
-      this.entryPoint.push(flag, value);
-      this.entryPoint[this.entryPoint.indexOf(flag) + 1] = value;
-    }
-  }
-
-  public withRandomMnemonic() {
-    if (!this.entryPoint.includes("--mnemonic-random")) {
-      this.entryPoint.push("--mnemonic-random");
-    }
-    return this;
-  }
-
-  /**
-   * Sets the log verbosity level.
-   * @example
-   * ```typescript
-   * await new AnvilContainer().verboseLogs(LogVerbosity.Five).start();
-   * ```
-   * @param logVerbosity The verbosity level.
-   */
-  public verboseLogs(logVerbosity: LogVerbosity) {
-    if (!this.entryPoint.includes(logVerbosity)) {
-      this.entryPoint.push(logVerbosity);
-    }
-    return this;
-  }
-
-  public autoImpersonate() {
-    if (!this.entryPoint.includes("--auto-impersonate")) {
-      this.entryPoint.push("--auto-impersonate");
-    }
-    return this;
-  }
-
-  public jsonLogFormat() {
-    if (!this.entryPoint.includes("--json")) {
-      this.entryPoint.push("--json");
-    }
-    return this;
-  }
-
-  /**
-   * Forks from a given RPC URL.
-   * @example
-   * ```typescript
-   * await new AnvilContainer()
-   * .withForkUrl(`https://mainnet.infura.io/v3/${INFURA_KEY}`)
-   * .start();
-   * ```
-   * @param url The RPC URL to fork from.
-   */
-  public withForkUrl(url: string): this {
-    this.withEnvironment({ ANVIL_FORK_URL: url });
-    this.setCliFlag("--fork-url", url);
-    return this;
-  }
-
-  /**
-   * Forks from a specific block number.
-   * @example
-   * ```typescript
-   * await new AnvilContainer()
-   * .withForkUrl(`https://mainnet.infura.io/v3/${INFURA_KEY}`)
-   * .withForkBlockNumber(24314802)
-   * .start();
-   * ```
-   * @param blockNumber The block number to fork from.
-   */
-  public withForkBlockNumber(blockNumber: number): this {
-    this.withEnvironment({ ANVIL_FORK_BLOCK_NUMBER: blockNumber.toString() });
-    this.setCliFlag("--fork-block-number", blockNumber.toString());
-    return this;
+    this.options = options ?? new AnvilOptions();
   }
 
   /**
@@ -133,8 +56,8 @@ export class AnvilContainer extends GenericContainer {
    * @returns A promise that resolves to the started container.
    */
   public override async start(): Promise<StartedAnvilContainer> {
-    this.entryPoint.push("--host", "0.0.0.0");
-    this.withEntrypoint(this.entryPoint);
+    //this.options.setCliFlag("--host", "0.0.0.0");
+    this.withEntrypoint(this.options.entryPoint);
 
     const startedContainer = await super.start();
     return new StartedAnvilContainer(
@@ -143,12 +66,6 @@ export class AnvilContainer extends GenericContainer {
     );
   }
 }
-
-/**
- * Represents a hex string with a 0x prefix.
- */
-export type HexString = `0x${string}`;
-
 /**
  * A started Anvil container with helper methods for interacting with the node.
  */

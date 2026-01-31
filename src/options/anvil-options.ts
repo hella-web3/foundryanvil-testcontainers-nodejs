@@ -1,0 +1,141 @@
+import { AccountOptions } from "./account-options";
+import { MiningOptions } from "./mining-options";
+import { LoggingOptions } from "./logging-options";
+import { ForkingOptions } from "./forking-options";
+import { NetworkOptions } from "./network-options";
+import { EvmOptions } from "./evm-options";
+import { ServerOptions } from "./server-options";
+import { StateOptions } from "./state-options";
+import { AnvilFlag } from "../types";
+
+const BASE_ENTRYPOINT = ["anvil", "--host", "0.0.0.0"];
+
+export type SetFlagFunction = (flag: AnvilFlag, value: string) => void;
+
+export type ToggleFlagFunction = (flag: AnvilFlag, enabled: boolean) => void;
+
+export type GetAnvilOptions = () => AnvilOptions;
+
+export class AnvilOptions {
+  private readonly _entryPoint: string[] = BASE_ENTRYPOINT;
+
+  constructor(entryPoint: string[] = BASE_ENTRYPOINT) {
+    this._entryPoint = entryPoint;
+  }
+
+  get entryPoint(): string[] {
+    return this._entryPoint;
+  }
+
+  private toggleFlagFunction: ToggleFlagFunction = (
+    flag: AnvilFlag,
+    enabled: boolean,
+  ) => {
+    const index = this._entryPoint.indexOf(flag);
+    if (enabled && index === -1) {
+      this._entryPoint.push(flag);
+    } else if (!enabled && index !== -1) {
+      this._entryPoint.splice(index, 1);
+    }
+  };
+
+  private setFlagFunction: SetFlagFunction = (
+    flag: AnvilFlag,
+    value: string,
+  ) => {
+    const index = this._entryPoint.indexOf(flag);
+    if (index !== -1) {
+      this._entryPoint[index + 1] = value;
+    } else {
+      this._entryPoint.push(flag, value);
+    }
+  };
+
+  private getAnvilOptions: GetAnvilOptions = () => this;
+
+  private _network = new NetworkOptions(
+    this.toggleFlagFunction,
+    this.getAnvilOptions,
+  );
+
+  get network(): NetworkOptions {
+    return this._network;
+  }
+
+  private _server = new ServerOptions(
+    this.setFlagFunction,
+    this.toggleFlagFunction,
+    this.getAnvilOptions,
+  );
+
+  get server(): ServerOptions {
+    return this._server;
+  }
+
+  private _state = new StateOptions(
+    this.setFlagFunction,
+    this.toggleFlagFunction,
+    this.getAnvilOptions,
+  );
+
+  get state(): StateOptions {
+    return this._state;
+  }
+
+  private _mining = new MiningOptions(
+    this.setFlagFunction,
+    this.toggleFlagFunction,
+    this.getAnvilOptions,
+  );
+
+  get mining(): MiningOptions {
+    return this._mining;
+  }
+
+  private _logs = new LoggingOptions(
+    this.setFlagFunction,
+    this.toggleFlagFunction,
+    this.getAnvilOptions,
+  );
+
+  get logs(): LoggingOptions {
+    return this._logs;
+  }
+
+  private _fork = new ForkingOptions(
+    this.setFlagFunction,
+    this.toggleFlagFunction,
+    this.getAnvilOptions,
+  );
+
+  get fork(): ForkingOptions {
+    return this._fork;
+  }
+
+  private _evm = new EvmOptions(
+    this.setFlagFunction,
+    this.toggleFlagFunction,
+    this.getAnvilOptions,
+  );
+
+  get evm(): EvmOptions {
+    return this._evm;
+  }
+
+  private _account = new AccountOptions(
+    this.setFlagFunction,
+    this.toggleFlagFunction,
+    this.getAnvilOptions,
+  );
+
+  get account(): AccountOptions {
+    return this._account;
+  }
+
+  /*  private setCliFlag(flag: string, value: string) {
+    if (!this.entryPoint.includes(flag)) {
+      this.entryPoint.push(flag, value);
+      this.entryPoint[this.entryPoint.indexOf(flag) + 1] = value;
+    }
+  }*/
+}

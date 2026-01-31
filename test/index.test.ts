@@ -5,17 +5,23 @@ import {
   StartedAnvilContainer,
 } from "../src";
 import { Abi, parseEther, parseEventLogs, TransactionReceipt } from "viem";
+import { AnvilOptions } from "../src/options/anvil-options";
 
 describe("AnvilContainer", () => {
   let container: StartedAnvilContainer;
 
   beforeAll(async () => {
-    container = await new AnvilContainer()
-      .verboseLogs(LogVerbosity.Five)
-      .jsonLogFormat()
+    const options: AnvilOptions = new AnvilOptions().account
       .withRandomMnemonic()
-      .autoImpersonate()
-      .start();
+      .account.withAccounts(5)
+      .account.withBalance(100)
+      .evm.autoImpersonate()
+      .evm.withPrintTraces()
+      .logs.verboseLogs(LogVerbosity.Five)
+      .logs.jsonLogFormat()
+      .mining.withBlockTime(1);
+
+    container = await new AnvilContainer(options).start();
   }, 60000);
 
   afterAll(async () => {
