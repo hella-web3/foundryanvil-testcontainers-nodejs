@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: write # Required to create releases
-  id-token: write # Required for NPM provenance in the called publish workflow
 
 jobs:
   release:
@@ -22,8 +21,3 @@ jobs:
           gh release create ${{ github.ref_name }} \
             --title "Release ${{ github.ref_name }}" \
             --generate-notes
-
-  publish:
-    needs: release
-    uses: ./.github/workflows/publish.yml
-    secrets: inherit
