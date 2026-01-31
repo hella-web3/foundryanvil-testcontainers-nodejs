@@ -22,6 +22,12 @@ export class NetworkOptions {
 
   /**
    * Enable Celo network features.
+   * Sets the `--celo` flag.
+   * @param enabled Whether to enable. Defaults to true.
+   * @example
+   * ```typescript
+   * const options: AnvilOptions = new AnvilOptions().network.withCelo();
+   * ```
    */
   public withCelo(enabled: boolean = true): AnvilOptions {
     this.toggleCliFlag("--celo", enabled);
@@ -30,6 +36,12 @@ export class NetworkOptions {
 
   /**
    * Enable Optimism network features.
+   * Sets the `--optimism` flag.
+   * @param enabled Whether to enable. Defaults to true.
+   * @example
+   * ```typescript
+   * const options: AnvilOptions = new AnvilOptions().network.withOptimism();
+   * ```
    */
   public withOptimism(enabled: boolean = true): AnvilOptions {
     this.toggleCliFlag("--optimism", enabled);

@@ -22,7 +22,12 @@ export class LoggingOptions {
 
   /**
    * The color of the log messages.
+   * Sets the `--color` flag.
    * @param color Color setting.
+   * @example
+   * ```typescript
+   * const options: AnvilOptions = new AnvilOptions().logs.withColor(Color.Always);
+   * ```
    */
   public withColor(color: Color): AnvilOptions {
     this.setCliFlag("--color", color);
@@ -31,6 +36,12 @@ export class LoggingOptions {
 
   /**
    * Format log messages as Markdown.
+   * Sets the `--md` flag.
+   * @param enabled Whether to enable. Defaults to true.
+   * @example
+   * ```typescript
+   * const options: AnvilOptions = new AnvilOptions().logs.withMarkdownFormat();
+   * ```
    */
   public withMarkdownFormat(enabled: boolean = true): AnvilOptions {
     this.toggleCliFlag("--md", enabled);
@@ -39,6 +50,12 @@ export class LoggingOptions {
 
   /**
    * Do not print log messages.
+   * Sets the `--quiet` flag.
+   * @param enabled Whether to enable. Defaults to true.
+   * @example
+   * ```typescript
+   * const options: AnvilOptions = new AnvilOptions().logs.quiet();
+   * ```
    */
   public quiet(enabled: boolean = true): AnvilOptions {
     this.toggleCliFlag("--quiet", enabled);
@@ -47,7 +64,12 @@ export class LoggingOptions {
 
   /**
    * Sets the verbosity level of the log messages.
+   * Sets the `-v`, `-vv`, etc. flags.
    * @param logVerbosity Verbosity level.
+   * @example
+   * ```typescript
+   * const options: AnvilOptions = new AnvilOptions().logs.verboseLogs(LogVerbosity.Three);
+   * ```
    */
   public verboseLogs(logVerbosity: LogVerbosity): AnvilOptions {
     this.toggleCliFlag(logVerbosity, true);
@@ -56,6 +78,12 @@ export class LoggingOptions {
 
   /**
    * Format log messages as JSON.
+   * Sets the `--json` flag.
+   * @param enabled Whether to enable. Defaults to true.
+   * @example
+   * ```typescript
+   * const options: AnvilOptions = new AnvilOptions().logs.jsonLogFormat();
+   * ```
    */
   public jsonLogFormat(enabled: boolean = true): AnvilOptions {
     this.toggleCliFlag("--json", enabled);
@@ -64,6 +92,12 @@ export class LoggingOptions {
 
   /**
    * Disable printing of `console.log` invocations to stdout.
+   * Sets the `--disable-console-log` flag.
+   * @param enabled Whether to enable. Defaults to true.
+   * @example
+   * ```typescript
+   * const options: AnvilOptions = new AnvilOptions().logs.disableConsoleLog();
+   * ```
    */
   public disableConsoleLog(enabled: boolean = true): AnvilOptions {
     this.toggleCliFlag("--disable-console-log", enabled);
