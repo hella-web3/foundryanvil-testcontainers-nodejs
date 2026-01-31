@@ -19,6 +19,15 @@ import path from "node:path";
 import { Color, Hardfork, HexString, LogVerbosity, Order } from "./types";
 import { AnvilOptions } from "./options/anvil-options";
 
+export { AnvilOptions };
+export { AccountOptions } from "./options/account-options";
+export { EvmOptions } from "./options/evm-options";
+export { ForkingOptions } from "./options/forking-options";
+export { LoggingOptions } from "./options/logging-options";
+export { MiningOptions } from "./options/mining-options";
+export { NetworkOptions } from "./options/network-options";
+export { ServerOptions } from "./options/server-options";
+export { StateOptions } from "./options/state-options";
 export { Color, Hardfork, LogVerbosity, Order };
 export type { HexString };
 /**
