@@ -1,4 +1,9 @@
-import { AnvilOptions, GetAnvilOptions, SetFlagFunction, ToggleFlagFunction, } from "./anvil-options";
+import {
+  AnvilOptions,
+  GetAnvilOptions,
+  SetFlagFunction,
+  ToggleFlagFunction,
+} from "./anvil-options";
 import { Order } from "../types";
 
 export class StateOptions {

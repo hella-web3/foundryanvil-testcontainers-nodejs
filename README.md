@@ -62,12 +62,13 @@ describe("AnvilContainer", () => {
   let container: StartedAnvilContainer;
 
   beforeAll(async () => {
-    container = await new AnvilContainer()
+    const options = new AnvilOptions().logs
       .verboseLogs(LogVerbosity.Five)
-      .jsonLogFormat()
-      .withRandomMnemonic()
-      .autoImpersonate()
-      .start();
+      .logs.jsonLogFormat()
+      .account.withRandomMnemonic()
+      .evm.autoImpersonate();
+
+    container = await new AnvilContainer(options).start();
   }, 60000);
 
   afterAll(async () => {
@@ -112,15 +113,105 @@ it("test send transaction", async () => {
 
 ---
 
-### Forking
+### Forking Options
 
 Configure the Anvil node to fork from a remote RPC URL:
 
 ```ts
-const container = await new AnvilContainer()
+const options = new AnvilOptions().fork
   .withForkUrl(`https://mainnet.infura.io/v3/${INFURA_KEY}`)
-  .withForkBlockNumber(17500000)
-  .start();
+  .fork.withForkBlockNumber(17500000);
+
+const container = await new AnvilContainer(options).start();
+```
+
+---
+
+## Configuration Options
+
+The `AnvilContainer` can be highly customized using the `AnvilOptions` class. Options are organized into logical modules to make configuration intuitive.
+
+### Account Options
+Configure development accounts, balances, and mnemonics.
+* **Use-case**: Setup specific pre-funded accounts or use a known mnemonic to ensure predictable addresses across test runs.
+
+```ts
+const options = new AnvilOptions().account
+  .withAccounts(10)
+  .account.withBalance(1000)
+  .account.withRandomMnemonic();
+
+const container = await new AnvilContainer(options).start();
+```
+
+### EVM Options
+Fine-tune the EVM behavior, gas limits, and hardforks.
+* **Use-case**: Test contract deployments that exceed default code size limits or simulate specific Ethereum hardforks.
+
+```ts
+const options = new AnvilOptions().evm
+  .withHardfork(Hardfork.London)
+  .evm.withCodeSizeLimit(32128)
+  .evm.autoImpersonate();
+```
+
+### Forking Options
+Fork from a remote RPC endpoint to test against real-world state.
+* **Use-case**: Integration tests that interact with existing protocols (e.g., Uniswap, Aave) on Mainnet or L2s.
+
+```ts
+const options = new AnvilOptions().fork
+  .withForkUrl("https://mainnet.infura.io/v3/YOUR_KEY")
+  .fork.withForkBlockNumber(18000000);
+```
+
+### Mining Options
+Control block production and mining behavior.
+* **Use-case**: Simulate a real-time mining interval to test frontend polling logic or time-dependent contract features.
+
+```ts
+const options = new AnvilOptions().mining
+  .withBlockTime(1) // Mine a block every second
+  .mining.withMixedMining();
+```
+
+### Logging Options
+Adjust output verbosity and format for better debugging.
+* **Use-case**: Enable JSON logging for automated log analysis or increase verbosity to debug failing transactions.
+
+```ts
+const options = new AnvilOptions().logs
+  .verboseLogs(LogVerbosity.Three)
+  .logs.jsonLogFormat();
+```
+
+### Network Options
+Enable features specific to certain networks like Celo or Optimism.
+* **Use-case**: E2E tests for cross-chain applications or protocols deployed on Optimism or Celo.
+
+```ts
+const options = new AnvilOptions().network
+  .withOptimism();
+```
+
+### Server Options
+Configure the RPC server settings, CORS, and IPC.
+* **Use-case**: Testing IPC connections or adjusting CORS settings for local web application development.
+
+```ts
+const options = new AnvilOptions().server
+  .withAllowOrigin("*")
+  .server.noCors();
+```
+
+### State Options
+Manage chain state, persistence, and snapshots.
+* **Use-case**: Speed up test suites by loading a pre-configured state instead of re-deploying contracts every time.
+
+```ts
+const options = new AnvilOptions().state
+  .withLoadState("path/to/state.json")
+  .state.withDumpState("path/to/new-state.json");
 ```
 
 ---
