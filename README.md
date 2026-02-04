@@ -62,8 +62,8 @@ describe("AnvilContainer", () => {
   let container: StartedAnvilContainer;
 
   beforeAll(async () => {
-    const options = new AnvilOptions().logs
-      .verboseLogs(LogVerbosity.Five)
+    const options = new AnvilOptions()
+      .logs.verboseLogs(LogVerbosity.Five)
       .logs.jsonLogFormat()
       .account.withRandomMnemonic()
       .evm.autoImpersonate();
@@ -129,11 +129,24 @@ const container = await new AnvilContainer(options).start();
 
 ## Configuration Options
 
-The `AnvilContainer` can be highly customized using the `AnvilOptions` class. Options are organized into logical modules to make configuration intuitive.
+The `AnvilContainer` can be highly customized using the `AnvilOptions` class.
+Options are organized into logical modules to make configuration intuitive.
 
 ### Account Options
+
 Configure development accounts, balances, and mnemonics.
-* **Use-case**: Setup specific pre-funded accounts or use a known mnemonic to ensure predictable addresses across test runs.
+
+* **Use-case**: Setup specific pre-funded accounts or use a known mnemonic to
+  ensure predictable addresses across test runs.
+
+| Option                                 | Description                                                  |
+|----------------------------------------|--------------------------------------------------------------|
+| `withAccounts(count: number)`          | Sets the number of dev accounts to generate and configure.   |
+| `withBalance(balance: number)`         | Sets the balance of every dev account in Ether.              |
+| `withDerivationPath(path: string)`     | Sets the derivation path of the child key to be derived.     |
+| `withMnemonic(mnemonic: string)`       | Sets the BIP39 mnemonic phrase used for generating accounts. |
+| `withRandomMnemonic(words?: number)`   | Automatically generates a BIP39 mnemonic phrase.             |
+| `withMnemonicSeedUnsafe(seed: string)` | Generates a BIP39 mnemonic phrase from a given seed.         |
 
 ```ts
 const options = new AnvilOptions().account
@@ -145,8 +158,29 @@ const container = await new AnvilContainer(options).start();
 ```
 
 ### EVM Options
+
 Fine-tune the EVM behavior, gas limits, and hardforks.
-* **Use-case**: Test contract deployments that exceed default code size limits or simulate specific Ethereum hardforks.
+
+* **Use-case**: Test contract deployments that exceed default code size limits
+  or simulate specific Ethereum hardforks.
+
+| Option                                             | Description                                                                   |
+|----------------------------------------------------|-------------------------------------------------------------------------------|
+| `withHardfork(hardfork: Hardfork)`                 | Sets the EVM hardfork to use.                                                 |
+| `autoImpersonate(enabled?: boolean)`               | Enables automatic impersonation on startup.                                   |
+| `withBlockBaseFeePerGas(fee: bigint \| number)`    | Sets the base fee in a block.                                                 |
+| `withChainId(chainId: number)`                     | Sets the chain ID.                                                            |
+| `withCodeSizeLimit(size: number)`                  | EIP-170: Contract code size limit in bytes.                                   |
+| `disableBlockGasLimit(enabled?: boolean)`          | Disable the `call.gas_limit <= block.gas_limit` constraint.                   |
+| `disableCodeSizeLimit(enabled?: boolean)`          | Disable EIP-170: Contract code size limit.                                    |
+| `disableMinPriorityFee(enabled?: boolean)`         | Disable the enforcement of a minimum suggested priority fee.                  |
+| `withGasLimit(limit: bigint \| number)`            | Sets the block gas limit.                                                     |
+| `withGasPrice(price: bigint \| number)`            | Sets the gas price.                                                           |
+| `disableDefaultCreate2Deployer(enabled?: boolean)` | Disable the default create2 deployer.                                         |
+| `disablePoolBalanceChecks(enabled?: boolean)`      | Disable pool balance checks.                                                  |
+| `withMemoryLimit(limit: number)`                   | The memory limit per EVM execution in bytes.                                  |
+| `withPrintTraces(enabled?: boolean)`               | Enable printing of traces for executed transactions and `eth_call` to stdout. |
+| `withStepsTracing(enabled?: boolean)`              | Enable steps tracing used for debug calls returning geth-style traces.        |
 
 ```ts
 const options = new AnvilOptions().evm
@@ -156,8 +190,25 @@ const options = new AnvilOptions().evm
 ```
 
 ### Forking Options
+
 Fork from a remote RPC endpoint to test against real-world state.
-* **Use-case**: Integration tests that interact with existing protocols (e.g., Uniswap, Aave) on Mainnet or L2s.
+
+* **Use-case**: Integration tests that interact with existing protocols (e.g.,
+  Uniswap, Aave) on Mainnet or L2s.
+
+| Option                                     | Description                                                                      |
+|--------------------------------------------|----------------------------------------------------------------------------------|
+| `withComputeUnitsPerSecond(cups: number)`  | Sets the number of assumed available compute units per second for this provider. |
+| `withForkUrl(url: string)`                 | Fetch state over a remote endpoint instead of starting from an empty state.      |
+| `withForkBlockNumber(blockNumber: number)` | Fetch state from a specific block number over a remote endpoint.                 |
+| `withForkChainId(chainId: number)`         | Specify chain id to skip fetching it from remote endpoint.                       |
+| `withForkHeader(header: string)`           | Headers to use for the rpc client.                                               |
+| `withForkRetryBackoff(backoff: number)`    | Initial retry backoff on encountering errors.                                    |
+| `withForkTransactionHash(hash: string)`    | Fetch state from after a specific transaction hash has been applied.             |
+| `noRateLimit(enabled?: boolean)`           | Disables rate limiting for this node's provider.                                 |
+| `noStorageCaching(enabled?: boolean)`      | Explicitly disables the use of RPC caching.                                      |
+| `withRetries(retries: number)`             | Number of retry requests for spurious networks.                                  |
+| `withTimeout(timeout: number)`             | Timeout in ms for requests sent to remote JSON-RPC server.                       |
 
 ```ts
 const options = new AnvilOptions().fork
@@ -166,8 +217,19 @@ const options = new AnvilOptions().fork
 ```
 
 ### Mining Options
+
 Control block production and mining behavior.
-* **Use-case**: Simulate a real-time mining interval to test frontend polling logic or time-dependent contract features.
+
+* **Use-case**: Simulate a real-time mining interval to test frontend polling
+  logic or time-dependent contract features.
+
+| Option                               | Description                                                   |
+|--------------------------------------|---------------------------------------------------------------|
+| `withBlockTime(seconds: number)`     | Sets the block time in seconds for interval mining.           |
+| `withMixedMining(enabled?: boolean)` | Enable mixed mining.                                          |
+| `withNoMining(enabled?: boolean)`    | Disable auto and interval mining, and mine on demand instead. |
+| `withBlockNumber(number: number)`    | Sets the number of the genesis block.                         |
+| `withSlotsInAnEpoch(slots: number)`  | Slots in an epoch.                                            |
 
 ```ts
 const options = new AnvilOptions().mining
@@ -176,8 +238,20 @@ const options = new AnvilOptions().mining
 ```
 
 ### Logging Options
+
 Adjust output verbosity and format for better debugging.
-* **Use-case**: Enable JSON logging for automated log analysis or increase verbosity to debug failing transactions.
+
+* **Use-case**: Enable JSON logging for automated log analysis or increase
+  verbosity to debug failing transactions.
+
+| Option                                    | Description                                              |
+|-------------------------------------------|----------------------------------------------------------|
+| `withColor(color: Color)`                 | The color of the log messages.                           |
+| `withMarkdownFormat(enabled?: boolean)`   | Format log messages as Markdown.                         |
+| `quiet(enabled?: boolean)`                | Do not print log messages.                               |
+| `verboseLogs(logVerbosity: LogVerbosity)` | Sets the verbosity level of the log messages.            |
+| `jsonLogFormat(enabled?: boolean)`        | Format log messages as JSON.                             |
+| `disableConsoleLog(enabled?: boolean)`    | Disable printing of `console.log` invocations to stdout. |
 
 ```ts
 const options = new AnvilOptions().logs
@@ -186,8 +260,16 @@ const options = new AnvilOptions().logs
 ```
 
 ### Network Options
+
 Enable features specific to certain networks like Celo or Optimism.
-* **Use-case**: E2E tests for cross-chain applications or protocols deployed on Optimism or Celo.
+
+* **Use-case**: E2E tests for cross-chain applications or protocols deployed on
+  Optimism or Celo.
+
+| Option                            | Description                       |
+|-----------------------------------|-----------------------------------|
+| `withCelo(enabled?: boolean)`     | Enable Celo network features.     |
+| `withOptimism(enabled?: boolean)` | Enable Optimism network features. |
 
 ```ts
 const options = new AnvilOptions().network
@@ -195,8 +277,20 @@ const options = new AnvilOptions().network
 ```
 
 ### Server Options
+
 Configure the RPC server settings, CORS, and IPC.
-* **Use-case**: Testing IPC connections or adjusting CORS settings for local web application development.
+
+* **Use-case**: Testing IPC connections or adjusting CORS settings for local web
+  application development.
+
+| Option                                  | Description                                                    |
+|-----------------------------------------|----------------------------------------------------------------|
+| `withIpc(path?: string)`                | Launch an ipc server at the given path or default path.        |
+| `withThreads(threads: number)`          | Number of threads to use.                                      |
+| `withAllowOrigin(origin: string)`       | The cors `allow_origin` header.                                |
+| `withCachePath(path: string)`           | Path to the cache directory where persisted states are stored. |
+| `noCors(enabled?: boolean)`             | Disable CORS.                                                  |
+| `noRequestSizeLimit(enabled?: boolean)` | Disable the default request body size limit.                   |
 
 ```ts
 const options = new AnvilOptions().server
@@ -205,8 +299,26 @@ const options = new AnvilOptions().server
 ```
 
 ### State Options
+
 Manage chain state, persistence, and snapshots.
-* **Use-case**: Speed up test suites by loading a pre-configured state instead of re-deploying contracts every time.
+
+* **Use-case**: Speed up test suites by loading a pre-configured state instead
+  of re-deploying contracts every time.
+
+| Option                                            | Description                                                      |
+|---------------------------------------------------|------------------------------------------------------------------|
+| `withConfigOut(path: string)`                     | Writes output of `anvil` as json to user-specified file.         |
+| `withDumpState(path: string)`                     | Dump the state and block environment of chain on exit.           |
+| `withInit(path: string)`                          | Initialize the genesis block with the given `genesis.json` file. |
+| `withLoadState(path: string)`                     | Initialize the chain from a previously saved state snapshot.     |
+| `withMaxPersistedStates(count: number)`           | Max number of states to persist on disk.                         |
+| `withOrder(order: Order)`                         | How transactions are sorted in the mempool.                      |
+| `withPreserveHistoricalStates(enabled?: boolean)` | Preserve historical state snapshots when dumping the state.      |
+| `withPruneHistory(count?: number)`                | Don't keep full chain history.                                   |
+| `withStateInterval(seconds: number)`              | Interval in seconds at which the state is to be dumped to disk.  |
+| `withState(path: string)`                         | Alias for both --load-state and --dump-state.                    |
+| `withTimestamp(timestamp: number)`                | The timestamp of the genesis block.                              |
+| `withTransactionBlockKeeper(count: number)`       | Number of blocks with transactions to keep in memory.            |
 
 ```ts
 const options = new AnvilOptions().state
@@ -285,6 +397,10 @@ cast block-number
 ```shell
 node ./scripts/get-block-number.ts
 ```
+
+## Maintainers
+
+Maintained by [Hella Labs](https://hella.website/).
 
 ## License
 
