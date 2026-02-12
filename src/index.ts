@@ -202,6 +202,7 @@ export class StartedAnvilContainer extends AbstractStartedContainer {
       const abiJson = fs.readFileSync(fullPath, "utf8");
       return JSON.parse(abiJson) as Abi;
     } catch (error: any) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       switch (error.code) {
         case "ENOENT":
           throw new Error(`ABI file not found at ${fullPath}`);
@@ -230,6 +231,7 @@ export class StartedAnvilContainer extends AbstractStartedContainer {
     try {
       return fs.readFileSync(fullPath, "utf8") as HexString;
     } catch (error: any) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       switch (error.code) {
         case "ENOENT":
           throw new Error(`Bytecode file not found at ${fullPath}`);

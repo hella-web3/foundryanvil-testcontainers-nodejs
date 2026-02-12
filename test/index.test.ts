@@ -1,4 +1,10 @@
-import { AnvilContainer, AnvilOptions, HexString, LogVerbosity, StartedAnvilContainer, } from "../src";
+import {
+  AnvilContainer,
+  AnvilOptions,
+  HexString,
+  LogVerbosity,
+  StartedAnvilContainer,
+} from "../src";
 import { Abi, parseEther, parseEventLogs, TransactionReceipt } from "viem";
 
 describe("AnvilContainer", () => {
