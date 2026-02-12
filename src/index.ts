@@ -197,11 +197,23 @@ export class StartedAnvilContainer extends AbstractStartedContainer {
    * @param abiLocation location of the ABI file relative to the test/artifacts directory
    */
   contractAbi(abiLocation: string): Abi {
-    const abiJson = fs.readFileSync(
-      path.join(__dirname, `../test/artifacts/${abiLocation}`),
-      "utf8",
-    );
-    return JSON.parse(abiJson) as Abi;
+    const fullPath = path.join(__dirname, `../test/artifacts/${abiLocation}`);
+    try {
+      const abiJson = fs.readFileSync(fullPath, "utf8");
+      return JSON.parse(abiJson) as Abi;
+    } catch (error: any) {
+      switch (error.code) {
+        case "ENOENT":
+          throw new Error(`ABI file not found at ${fullPath}`);
+        case "EACCES":
+          throw new Error(`Permission denied for ABI file at ${fullPath}`);
+        case "EISDIR":
+          throw new Error(
+            `ABI location is a directory, not a file: ${fullPath}`,
+          );
+      }
+      throw error;
+    }
   }
 
   /**
@@ -214,9 +226,21 @@ export class StartedAnvilContainer extends AbstractStartedContainer {
    * @param binLocation location of the bytecode file relative to the test/artifacts directory
    */
   contractBytecode(binLocation: string): HexString {
-    return fs.readFileSync(
-      path.join(__dirname, `../test/artifacts/${binLocation}`),
-      "utf8",
-    ) as HexString;
+    const fullPath = path.join(__dirname, `../test/artifacts/${binLocation}`);
+    try {
+      return fs.readFileSync(fullPath, "utf8") as HexString;
+    } catch (error: any) {
+      switch (error.code) {
+        case "ENOENT":
+          throw new Error(`Bytecode file not found at ${fullPath}`);
+        case "EACCES":
+          throw new Error(`Permission denied for bytecode file at ${fullPath}`);
+        case "EISDIR":
+          throw new Error(
+            `Bytecode location is a directory, not a file: ${fullPath}`,
+          );
+      }
+      throw error;
+    }
   }
 }
