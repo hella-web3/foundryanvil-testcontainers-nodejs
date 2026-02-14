@@ -35,7 +35,14 @@ export class AnvilOptions {
     if (enabled && index === -1) {
       this._entryPoint.push(flag);
     } else if (!enabled && index !== -1) {
-      this._entryPoint.splice(index, 1);
+      if (
+        this._entryPoint[index + 1] &&
+        !this._entryPoint[index + 1].startsWith("-")
+      ) {
+        this._entryPoint.splice(index, 2);
+      } else {
+        this._entryPoint.splice(index, 1);
+      }
     }
   };
 
@@ -45,7 +52,14 @@ export class AnvilOptions {
   ) => {
     const index = this._entryPoint.indexOf(flag);
     if (index !== -1) {
-      this._entryPoint[index + 1] = value;
+      if (
+        this._entryPoint[index + 1] &&
+        !this._entryPoint[index + 1].startsWith("-")
+      ) {
+        this._entryPoint[index + 1] = value;
+      } else {
+        this._entryPoint.splice(index + 1, 0, value);
+      }
     } else {
       this._entryPoint.push(flag, value);
     }
