@@ -132,6 +132,9 @@ const container = await new AnvilContainer(options).start();
 The `AnvilContainer` can be highly customized using the `AnvilOptions` class.
 Options are organized into logical modules to make configuration intuitive.
 
+Review the [Foundry Docs](https://www.getfoundry.sh/reference/anvil/anvil) for
+more details.
+
 ### Account Options
 
 Configure development accounts, balances, and mnemonics.

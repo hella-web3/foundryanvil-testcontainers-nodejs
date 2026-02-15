@@ -8,6 +8,12 @@ import { ServerOptions } from "./server-options";
 import { StateOptions } from "./state-options";
 import { AnvilFlag } from "../types";
 
+/**
+ * The default base entry point for the Anvil container.
+ *
+ * It uses `anvil` as the executable and binds to `0.0.0.0` to ensure the server
+ * is accessible from outside the container.
+ */
 const BASE_ENTRYPOINT = ["anvil", "--host", "0.0.0.0"];
 
 export type SetFlagFunction = (flag: AnvilFlag, value: string) => void;
@@ -19,6 +25,25 @@ export type GetAnvilOptions = () => AnvilOptions;
 export class AnvilOptions {
   private readonly _entryPoint: string[] = BASE_ENTRYPOINT;
 
+  /**
+   * Creates a new instance of AnvilOptions.
+   *
+   * @param entryPoint - The base entry point for the Anvil process.
+   * This must start with the keyword `anvil` as it runs the Foundry Anvil CLI tool
+   * within the Docker container.
+   *
+   * Default: `["anvil", "--host", "0.0.0.0"]`
+   *
+   * ONLY ADVANCED USERS SHOULD SET A CUSTOM ENTRY POINT.
+   * Recommended to use fluent Config setters, `setFlagFunction` and `toggleFlagFunction` to
+   * configure the Anvil process.
+   *
+   * @example
+   * ```typescript
+   * // Custom entry point MUST start with the 'anvil' command
+   * const options = new AnvilOptions(["anvil", "--port", "8545", "--host", "0.0.0.0"]);
+   * ```
+   */
   constructor(entryPoint: string[] = BASE_ENTRYPOINT) {
     this._entryPoint = entryPoint;
   }
@@ -145,11 +170,4 @@ export class AnvilOptions {
   get account(): AccountOptions {
     return this._account;
   }
-
-  /*  private setCliFlag(flag: string, value: string) {
-    if (!this.entryPoint.includes(flag)) {
-      this.entryPoint.push(flag, value);
-      this.entryPoint[this.entryPoint.indexOf(flag) + 1] = value;
-    }
-  }*/
 }
